@@ -1,0 +1,23 @@
+
+
+# wrong version
+#from .configuration_internvl import InternVLConfig, InternVLVisionConfig
+#from .modeling_internvl3 import InternVLForConditionalGeneration
+
+# from .modeling_internvl_chat import InternVLChatModel
+from .modeling_internvl_chat_sparse import InternVLChatModel
+#from .modeling_internvl_chat_sparse_IPCV import InternVLChatModel
+#from .modeling_internvl_chat_sparse_FastV import InternVLChatModel
+#from .modeling_internvl_chat_sparse_SparseVLM import InternVLChatModel
+#from .modeling_internvl_chat_sparse_V2Drop import InternVLChatModel
+#from .modeling_internvl_chat_sparse_ToMe import InternVLChatModel
+#from .modeling_internvl_chat_sparse_Token_fusion import InternVLChatModel
+
+#from .modeling_internvl_chat_sparse_IPCV_FastV import InternVLChatModel
+
+
+
+
+from .configuration_intern_vit import InternVisionConfig
+from .configuration_internvl_chat import InternVLChatConfig
+#from .image_processor_qwen2_vl_dart_vit import load_pretrained_model

@@ -9,15 +9,6 @@ class KVFlopsMeter:
         self.sample_count = 0
         self.hooks = []
 
-    # def _attn_hook_llm(self, module, inputs, output):
-    #     """
-    #     LLM Attention hook: 计算 FLOPs + KV Cache
-    #     """
-    #     print("module type", module._get_name(),inputs,len(output))
-    #     if len(inputs) == 0 or not isinstance(inputs[0], torch.Tensor):
-    #         return
-    #     x = inputs[0]
-
     def _attn_hook_llm(self, module, args, kwargs, output):
         #print("module type", module._get_name(),args, kwargs)
         if "hidden_states" in kwargs:
@@ -35,10 +26,10 @@ class KVFlopsMeter:
         num_heads = module.num_heads
         head_dim = module.head_dim
 
-        # Q/K/V 投影 FLOPs
+        # Q/K/V proj FLOPs
         proj_flops = 3 * (2 * B * Lq * D * (num_heads * head_dim))
 
-        # Attention 矩阵乘法 FLOPs
+        # Attention matrix multiply FLOPs
         Lk = Lq
         past_kv = None
         
@@ -49,25 +40,14 @@ class KVFlopsMeter:
 
 
         #print("has get all",hasattr(past_kv, "get_all"),type(past_kv),)
-        # 处理 tuple/list 形式
+        # handle tuple/list form
         if isinstance(past_kv, (tuple, list)) and len(past_kv) == 2:
             k, v = past_kv
-
-        # 处理 DynamicCache 形式
-        # DynamicCache 形式
+        # handle DynamicCache form
         elif past_kv is not None and hasattr(past_kv, "__len__") and hasattr(past_kv, "__getitem__"):
             if module.layer_idx is not None and len(past_kv) > module.layer_idx:
                 #print("one layer kv",past_kv[module.layer_idx])
                 k, v = past_kv[module.layer_idx]
-        # elif hasattr(past_kv, "get_all"):  # DynamicCache API
-        #     # get_all() 返回的是 [(k, v), (k, v), ...]，按 layer_idx 取
-        #     all_kv = past_kv.get_all()
-        #     print("allkv",all_kv,module.layer_idx,len(all_kv))
-        #     if module.layer_idx is not None and module.layer_idx < len(all_kv):
-        #         k, v = all_kv[module.layer_idx]
-        #     else:
-        #         k, v = None, None
-        # 其它情况
         else:
             k, v = None, None
 
@@ -75,14 +55,13 @@ class KVFlopsMeter:
         #print("k,v",k.shape,v.shape,module.layer_idx)
         if isinstance(k, torch.Tensor) and k.dim() >= 3:
             Lk = k.shape[2]
-            # 用 Lq > 1 判断 prefill
+            # if not prefill
             if Lq > 1:
                 kv_bytes = (k.numel() + v.numel()) * k.element_size()
                 #print("single mb", kv_bytes/ (1024**2))
                 self.total_kv_MB += kv_bytes / (1024**2)
 
-        attn_flops = 2 * B * num_heads * Lq * Lk * head_dim * 2  # 两次乘法
-        # 输出投影 FLOPs
+        attn_flops = 2 * B * num_heads * Lq * Lk * head_dim * 2  
         out_proj_flops = 2 * B * Lq * (num_heads * head_dim) * D
 
         total_flops = proj_flops + attn_flops + out_proj_flops
@@ -90,7 +69,7 @@ class KVFlopsMeter:
 
     def _mlp_hook_llm(self, module, args, kwargs, output):
         """
-        LLM MLP (SwiGLU) hook: 计算 FLOPs
+        LLM MLP (SwiGLU) hook: compute FLOPs
         gate_proj: hidden_size -> intermediate_size
         up_proj: hidden_size -> intermediate_size
         down_proj: intermediate_size -> hidden_size
@@ -109,12 +88,12 @@ class KVFlopsMeter:
             return
         B, N, Din = x.shape  # Din = hidden_size
 
-        # gate_proj 和 up_proj 是并行的两个 Linear
+        # gate_proj and up_proj (Linear)
         Dout = module.intermediate_size
         flops_gate = 2 * B * N * Din * Dout
         flops_up   = 2 * B * N * Din * Dout
 
-        # down_proj 是一个 Linear
+        # down_proj (Linear)
         flops_down = 2 * B * N * Dout * Din
 
         total_flops = flops_gate + flops_up + flops_down
@@ -122,8 +101,8 @@ class KVFlopsMeter:
 
     def _attn_hook_vit(self, module, args, kwargs, output):
         """
-        ViT Attention hook: 只算 FLOPs，不算 KV Cache
-        适配 VisionAttention / VisionFlashAttention2
+        ViT Attention hook: compute FLOPs, no KV Cache
+        for class VisionAttention / VisionFlashAttention2
         """
         if "hidden_states" in kwargs:
             x = kwargs["hidden_states"]
@@ -135,23 +114,22 @@ class KVFlopsMeter:
         #     return
         # x = inputs[0]
         #print("attn vit hidden_states shape:", x.shape)
-        # VisionAttention 输入是 [seq_len, dim]
+        # VisionAttention x shape[seq_len, dim]
         if x.dim() != 2:
             return
         seq_len, dim = x.shape
-        B = 1  # ViT 这里是合并 batch 后的 seq_len
+        B = 1  
         num_heads = getattr(module, "num_heads", None)
         head_dim = getattr(module, "head_dim", None) or (dim // num_heads if num_heads else None)
         if num_heads is None or head_dim is None:
             return
 
-        # Q/K/V 投影 FLOPs
+        # Q/K/V proj FLOPs
         proj_flops = 3 * (2 * seq_len * dim * dim)
 
-        # Attention 矩阵乘法 FLOPs（Lq = Lk = seq_len）
-        attn_flops = 2 * B * num_heads * seq_len * seq_len * head_dim * 2  # 两次乘法
+        # Attention matrix multiply FLOPs（Lq = Lk = seq_len）
+        attn_flops = 2 * B * num_heads * seq_len * seq_len * head_dim * 2 
 
-        # 输出投影 FLOPs
         out_proj_flops = 2 * seq_len * dim * dim
 
         total_flops = proj_flops + attn_flops + out_proj_flops
@@ -159,7 +137,7 @@ class KVFlopsMeter:
 
     def _mlp_hook_vit(self, module, args, kwargs, output):
         """
-        ViT MLP hook: 计算 FLOPs
+        ViT MLP hook: compute FLOPs
         fc1: dim -> hidden_dim
         fc2: hidden_dim -> dim
         """
@@ -195,7 +173,7 @@ class KVFlopsMeter:
 
     def start(self):
         for name, m in self.model.named_modules():
-            # 用类名字符串判断
+            # Judge by class name string
             cls_name = m.__class__.__name__
             #print(name,cls_name)
             if cls_name in {"Qwen2VLAttention", "Qwen2VLFlashAttention2"}:
@@ -216,7 +194,7 @@ class KVFlopsMeter:
 
     def record_sample(self):
         self.sample_count += 1
-        self._counting_kv = True  # 每个样本开始时允许统计一次 KV
+        self._counting_kv = True  
 
     def get_results(self):
         avg_flops = self.total_flops / self.sample_count if self.sample_count else 0

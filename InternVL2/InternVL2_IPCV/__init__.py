@@ -1,0 +1,7 @@
+# from .modeling_internvl_chat import InternVLChatModel
+
+#from .modeling_internvl_chat_sparse_IPCV import InternVLChatModel
+from .modeling_internvl_chat_sparse_IPCV_FastV import InternVLChatModel
+
+from .configuration_intern_vit import InternVisionConfig
+from .configuration_internvl_chat import InternVLChatConfig

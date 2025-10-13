@@ -77,8 +77,8 @@ AVAILABLE_SIMPLE_MODELS = {
     "whisper": "Whisper",
     "whisper_vllm": "WhisperVllm",
     "vora": "VoRA",
-    "qwen2_vl_dart_vit": "Qwen2_VL_DART_ViT",
-    "internvl2_dart_vit": "InternVL2_DART_ViT"
+    "qwen2_vl_ipcv": "Qwen2_VL_IPCV",
+    "internvl2_ipcv": "InternVL2_IPCV"
 }
 
 AVAILABLE_CHAT_TEMPLATE_MODELS = {

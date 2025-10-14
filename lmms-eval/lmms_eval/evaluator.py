@@ -186,6 +186,7 @@ def simple_evaluate(
     if isinstance(model, str):
         if model_args is None:
             model_args = ""
+            
         lm = lmms_eval.models.get_model(model, force_simple).create_from_arg_string(
             model_args,
             {

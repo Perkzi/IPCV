@@ -53,7 +53,7 @@ for task in "${tasks[@]}"; do
           torch_dtype=float16
 
           #GPU=0,1,2,3
-          GPU=6
+          GPU=5
 
           # log file name
           log_file="${output_path}/run_detail.log"
@@ -68,7 +68,6 @@ for task in "${tasks[@]}"; do
               --batch_size 1 \
               --log_samples \
               --output_path "$output_path" 2>&1 | tee "$log_file"
-
 
           sleep 10
         done

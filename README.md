@@ -9,12 +9,12 @@ The core logic of **IPCV** in Qwen2-VL is implemented in the class [`IPCV_ViT`](
 
 ### Environment
 ```bash
- conda create -n IPCV_Qwen2VL python=3.10 -y
- conda activate IPCV_Qwen2VL
- pip install accelerate qwen-vl-utils[decord]
- pip install flash-attn --no-build-isolation
- cd ../../lmms-eval && pip install -e .
- pip install pytorch_memlab
+conda create -n IPCV_Qwen2VL python=3.10 -y
+conda activate IPCV_Qwen2VL
+pip install accelerate qwen-vl-utils[decord]
+pip install flash-attn --no-build-isolation
+cd ../../lmms-eval && pip install -e .
+pip install pytorch_memlab
 pip install numpy==1.26.4 numexpr==2.12.1 pandas
 ```
 

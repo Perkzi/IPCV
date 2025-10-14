@@ -35,7 +35,7 @@ for task in "${tasks[@]}"; do
           # For IPCV: Sparse and vit_Sparse both should be True
           Sparse=True
           vit_Sparse=True
-          AS_layer=3
+          AS_layer=7
           Top_K=10
 
           # For DART
@@ -48,14 +48,13 @@ for task in "${tasks[@]}"; do
 
           torch_dtype=float16
 
-          #GPU=0,1,2,3
-          GPU=5,6
+          GPU=5
 
           # log file name
           log_file="${output_path}/run_detail.log"
 
           CUDA_VISIBLE_DEVICES=$GPU python3 -m accelerate.commands.launch \
-              --num_processes=2 \
+              --num_processes=1 \
               --main_process_port 50008 \
               -m lmms_eval \
               --model qwen2_vl_ipcv \

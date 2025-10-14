@@ -410,6 +410,10 @@ class InternVL2_IPCV(lmms):
             # })
             #------------prefilling only end----------------
 
+            # print("visuals",visuals,type(visuals))
+            if isinstance(visuals[0], str) and visuals[0].endswith(".mp4"):
+                self.modality = "video"
+
             if self.modality == "image":
                 if visuals:
                     visuals = [load_image(visual).to(torch.bfloat16).cuda() for visual in visuals]

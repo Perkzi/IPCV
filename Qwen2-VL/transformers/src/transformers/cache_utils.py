@@ -349,7 +349,7 @@ class DynamicCache(Cache):
         """
         return len(self.key_cache)
 
-    def filter_indices(self, keep_indexs: torch.Tensor): # HACK:edited by zichen
+    def filter_indices(self, keep_indexs: torch.Tensor): 
         """
         Filters the cache by keeping only the specified indices in the sequence dimension.
 

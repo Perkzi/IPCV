@@ -337,7 +337,7 @@ class VisionFlashAttention2(nn.Module):
         attn_output = flash_attn_varlen_func(q, k, v, cu_seqlens, cu_seqlens, max_seqlen, max_seqlen)
         attn_output = attn_output.reshape(seq_length, -1)
         attn_output = self.proj(attn_output)
-        return {'attn_output':attn_output, 'k_states':k, 'attn_scores':None} # 修改
+        return {'attn_output':attn_output, 'k_states':k, 'attn_scores':None} 
 
 class VisionSdpaAttention(nn.Module):
     def __init__(self, dim: int, num_heads: int = 16) -> None:

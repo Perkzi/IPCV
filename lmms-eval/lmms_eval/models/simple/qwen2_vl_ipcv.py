@@ -12,8 +12,10 @@ from tqdm import tqdm
 #from transformers import AutoProcessor, AutoTokenizer, Qwen2VLForConditionalGeneration
 from transformers import AutoProcessor, AutoTokenizer
 import sys
-sys.path.append('~/ViT-Prunning-self/Qwen2-VL/')
-from Qwen2VL_IPCV import Qwen2VLForConditionalGeneration
+import os
+sys.path.append(os.getcwd())
+# from Qwen2VL_IPCV import Qwen2VLForConditionalGeneration
+from Qwen2VL_IPCV import get_model_class
 
 from lmms_eval import utils
 from lmms_eval.api.instance import Instance
@@ -77,6 +79,7 @@ class Qwen2_VL_IPCV(lmms):
         vit_pivot_sim_choose = False,
 
         torch_dtype="auto",
+        llm_method="dart",
 
         AS_layer=3,
         Top_K=10,
@@ -99,22 +102,25 @@ class Qwen2_VL_IPCV(lmms):
             self._device = torch.device(f"cuda:{accelerator.local_process_index}")
             self.device_map = f"cuda:{accelerator.local_process_index}"
 
+        print("llm method",llm_method)
+        model_cls = get_model_class(llm_method=llm_method) 
         if use_flash_attention_2:
             # self._model = Qwen2VLForConditionalGeneration.from_pretrained(
             #     pretrained,
-            #     torch_dtype="auto",
+            #     torch_dtype=torch_dtype,
             #     device_map=self.device_map,
             #     attn_implementation="flash_attention_2",
             # ).eval()
-            self._model = Qwen2VLForConditionalGeneration.from_pretrained(
+            self._model = model_cls.from_pretrained(
                 pretrained,
                 torch_dtype=torch_dtype,
                 device_map=self.device_map,
                 attn_implementation="flash_attention_2",
             ).eval()
         else:
-            # self._model = Qwen2VLForConditionalGeneration.from_pretrained(pretrained, torch_dtype="auto", device_map=self.device_map).eval()
-            self._model = Qwen2VLForConditionalGeneration.from_pretrained(pretrained, torch_dtype=torch_dtype, device_map=self.device_map).eval()
+            # self._model = Qwen2VLForConditionalGeneration.from_pretrained(pretrained, torch_dtype=torch_dtype, device_map=self.device_map).eval()
+            self._model = model_cls.from_pretrained(pretrained, torch_dtype=torch_dtype, device_map=self.device_map).eval()
+
 
         self.processor = AutoProcessor.from_pretrained(pretrained, max_pixels=max_pixels, min_pixels=min_pixels)
         #print("config_size",pretrained,self.processor.text_config.hidden_size, self.processor.text_config.vocab_size)

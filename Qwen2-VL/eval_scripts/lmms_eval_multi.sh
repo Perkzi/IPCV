@@ -38,6 +38,8 @@ for task in "${tasks[@]}"; do
           AS_layer=7
           Top_K=10
 
+          llm_method=dart # dart fastv 
+
           # For DART
           pivot_image_token=4
           pivot_text_token=4
@@ -58,11 +60,12 @@ for task in "${tasks[@]}"; do
               --main_process_port 50008 \
               -m lmms_eval \
               --model qwen2_vl_ipcv \
-              --model_args pretrained=$model_id,device_map=cuda,use_flash_attention_2=True,Sparse=$Sparse,vit_Sparse=$vit_Sparse,pruned_layer=$pruned_layer,vit_pruned_layer=$vit_pruned_layer,image_token_start_index=$image_token_start_index,image_token_length=$image_token_length,max_num_trunction=$max_num_trunction,reduction_ratio=$reduction_ratio,vit_reduction_ratio=$vit_reduction_ratio,pivot_image_token=$pivot_image_token,pivot_text_token=$pivot_text_token,torch_dtype=$torch_dtype,AS_layer=$AS_layer,Top_K=$Top_K  \
+              --model_args pretrained=$model_id,device_map=cuda,use_flash_attention_2=True,Sparse=$Sparse,vit_Sparse=$vit_Sparse,pruned_layer=$pruned_layer,vit_pruned_layer=$vit_pruned_layer,image_token_start_index=$image_token_start_index,image_token_length=$image_token_length,max_num_trunction=$max_num_trunction,reduction_ratio=$reduction_ratio,vit_reduction_ratio=$vit_reduction_ratio,pivot_image_token=$pivot_image_token,pivot_text_token=$pivot_text_token,torch_dtype=$torch_dtype,AS_layer=$AS_layer,Top_K=$Top_K,llm_method=$llm_method  \
               --tasks "${task}" \
               --batch_size 1 \
               --log_samples \
               --output_path "$output_path" 2>&1 | tee "$log_file"
+
 
           sleep 10
         done

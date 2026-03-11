@@ -16,9 +16,11 @@ from lmms_eval.api.model import lmms
 from lmms_eval.api.registry import register_model
 
 import sys
-sys.path.append('~/ViT-Prunning-self/InternVL2/')
+import os
+sys.path.append(os.getcwd())
 
-from InternVL2_IPCV import InternVLChatModel
+# from InternVL2_IPCV import InternVLChatModel
+from InternVL2_IPCV import get_model_class
 
 import logging
 logging.getLogger("transformers.generation.utils").setLevel(logging.ERROR)
@@ -222,6 +224,7 @@ class InternVL2_IPCV(lmms):
         pivot_text_token=4,
 
         torch_dtype="auto",
+        llm_method="dart",
 
         AS_layer=3,
         Top_K=10,
@@ -253,8 +256,18 @@ class InternVL2_IPCV(lmms):
             self.device_map = f"cuda:{accelerator.local_process_index}"
 
         #self._model = AutoModel.from_pretrained(self.path, torch_dtype=torch.bfloat16, low_cpu_mem_usage=True, trust_remote_code=True, device_map=self.device_map).eval()
+        print("llm method",llm_method)
+        model_cls = get_model_class(llm_method=llm_method)
         if use_flash_attention_2:
-            self._model = InternVLChatModel.from_pretrained(
+            # self._model = InternVLChatModel.from_pretrained(
+            #     self.path,
+            #     torch_dtype=torch.bfloat16, 
+            #     low_cpu_mem_usage=True, 
+            #     trust_remote_code=True, 
+            #     device_map=self.device_map,
+            #     attn_implementation="flash_attention_2",
+            #     ).eval()
+            self._model = model_cls.from_pretrained(
                 self.path,
                 torch_dtype=torch.bfloat16, 
                 low_cpu_mem_usage=True, 
@@ -263,7 +276,14 @@ class InternVL2_IPCV(lmms):
                 attn_implementation="flash_attention_2",
                 ).eval()
         else:
-            self._model = InternVLChatModel.from_pretrained(
+            # self._model = InternVLChatModel.from_pretrained(
+            #     self.path,
+            #     torch_dtype=torch.bfloat16, 
+            #     low_cpu_mem_usage=True, 
+            #     trust_remote_code=True, 
+            #     device_map=self.device_map,
+            #     ).eval()
+            self._model = model_cls.from_pretrained(
                 self.path,
                 torch_dtype=torch.bfloat16, 
                 low_cpu_mem_usage=True, 
